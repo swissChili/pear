@@ -1,6 +1,7 @@
-var net = require('net');
+const http = require('http');
 var inquirer = require('inquirer');
 var readline = require('readline');
+var request = require('request');
 
 inquirer.prompt([
     {
@@ -35,72 +36,99 @@ inquirer.prompt([
         inquirer.prompt([
             {
                 type: 'text',
-                name: 'host',
+                name: 'conhost',
                 message: 'Choose host to connect to'
             },
             {
                 type: 'text',
-                name: 'port',
+                name: 'conport',
                 message: 'Choose port to connect to',
+                default: '9461'
+            },
+            {
+                type: 'text',
+                name: 'host',
+                message: 'Choose host to listen on',
+                default: 'localhost'
+            },
+            {
+                type: 'text',
+                name: 'port',
+                message: 'Choose port to listen on',
                 default: '9461'
             }
         ]).then(answers => {
-            do_connect(parseInt(answers.port, 10), answers.host)
+            do_connect(parseInt(answers.conport, 10), answers.conhost, parseInt(answers.port, 10), answers.host)
         })
     }
 })
 
-function do_connect(port, host) {
-    let socket = net.createConnection(port, host);
-    socket.on("data", data => {
-        console.log(data)
-    })
-    function inquire () {
-        inquirer.prompt([
-            {
-                type: 'text',
-                name: 'message',
-                message: '>'
+function do_connect(port, host, cport, chost) {
+
+    request.post(
+        `http://${host}:${port}/auth`,
+        { json: { port: cport, host: chost } },
+        ( err, response, body ) => {
+            if ( !err && response.statusCode == 200) {
+                console.log(body)
+            } else {
+                console.log(err)
             }
-        ]).then(answers => {
-            socket.write(answers.message);
-            inquire()
-        })
-    }
+        }
+    )
+    console.log("posted?")
     inquire()
 }
 
 function do_serve(PORT, HOST) {
-    net.createServer(function(sock) {
-        // Add a 'data' event handler to this instance of socket
-        sock.on('data', function(data) {
-            
-            console.log('DATA ' + sock.remoteAddress + ': ' + data);
-            // Write the data back to the socket, the client will receive it as data from the server
-            sock.write('You said "' + data + '"');
-            
-        });
+    function request_handler(req, res) {
+        let body = ""
+        req.on('readable', () => {
+            body += req.read()
+        })
+        console.log(req)
+        req.on('end', () => {
+            if ( req.url  == "/auth" ) {
+                authData = JSON.parse(body)
+                var conIp = authData.ip
+                var conPort = authData.port
+                res.end("yeetus")
+                do_connect(PORT, HOST, conPort, conIp)
+            } else {
+                message = JSON.parse(body).msg
+                console.log(message)
+                res.end("yeetus")
+            }
+        })
+    }
+    const server = http.createServer(request_handler)
 
-        function inquire () {
-            inquirer.prompt([
-                {
-                    type: 'text',
-                    name: 'message',
-                    message: ''
-                }
-            ]).then(answers => {
-                sock.write(answers.message);
-                inquire()
-            })
+    server.listen(PORT, (err) => {
+        if ( err ) { console.log(err) }
+    })
+}
+
+function send_message(host, port, message) {
+    request.post(
+        `http::/${host}:${port}`,
+        { json: { msg: message } },
+        ( err, response, body ) => {
+            if ( !err && response.statusCode == 200) {
+                console.log(body)
+            }
         }
-        inquire()
-        
-        // Add a 'close' event handler to this instance of socket
-        sock.on('close', function(data) {
-            console.log('CLOSED: ' + sock.remoteAddress +' '+ sock.remotePort);
-        });
-        
-    }).listen(PORT, HOST);
+    )
+}
 
-    console.log('Server listening on ' + HOST +':'+ PORT);
+function inquire (host, port) {
+    inquirer.prompt([
+        {
+            type: 'text',
+            name: 'message',
+            message: '>'
+        }
+    ]).then(answers => {
+        send_message(host, port, answers.message)
+        inquire()
+    })
 }
