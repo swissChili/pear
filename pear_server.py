@@ -19,4 +19,3 @@ def encrypt(pub, msg):
 
 def decrypt(key, msg):
     key.decrypt(ast.literal.eval(str(msg)))
-
