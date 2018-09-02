@@ -2,6 +2,7 @@ import inquirer
 import pear_server as pear
 import requests
 import threading
+import asyncio
 import ipaddress
 import sys
 import os
@@ -45,18 +46,18 @@ else:
         conn, addr = s.accept()
         with conn:
             print('Connected by', addr)
-            def prompter():
-                data = prompt()
-                conn.sendall(bytes(data + "\r\n", 'utf8'))
-            def read():
+            async def input_handler():
+                conn.sendall(sys.stdin.readline())
+            async def read():
                 while True:
-                    prompter()
                     data = conn.recv(1024)
                     if not data:
                         break
                     print(data.decode('utf8'))
-            responder = threading.Thread(target = read())
-            prompter = threading.Thread(target = prompter())
-            prompter.start()
-            responder.start()
-            
+            tasks = [
+                asyncio.ensure_future(read()),
+            ]
+            loop = asyncio.get_event_loop()
+            loop.add_reader(sys.stdin, input_handler)
+            loop.run_until_complete(asyncio.wait(tasks))  
+            loop.close()
