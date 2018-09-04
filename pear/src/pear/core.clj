@@ -3,11 +3,15 @@
   (:require [clojure.data.json :as json]
             [digest]))
 
-(def chain (atom []))
+(def blockchain (atom []))
 (def genesis-block {
   :nonce 0
   :hash "GENESIS"
 })
+(defn append-block
+  "appends a block to the chain"
+  [chain block]
+  (swap! chain conj block))
 
 (defn add-block 
   "This adds a block to the chain"
@@ -19,30 +23,42 @@
         :sender sender
         :hash hash
       }]
-      (swap! chain conj block))
+      (append-block chain block))
   chain))
 
 (defn validate
   "this validates the chain by checking the last block and
   recursively checking all before it"
   [chain]
+  (println (count @chain))
   (if (> (count @chain) 1) ;; if this is not the first block
                            ;; check all previous blocks
-    (let [new-chain (drop-last @chain)]
+    (let [new-chain (atom (drop-last @chain))]
       (let [last-block (last @chain)]
-        (let [chain-hash (digest/md5 (json/write-str new-chain))]
+        (let [chain-hash (digest/md5 (json/write-str @new-chain))]
+          (println "CHain Hash: " chain-hash)
+          (println "Block Hash: " (:hash last-block))
           (if (= chain-hash (:hash last-block))
-            (validate new-chain) false)))))
+            (do
+            (println "IF evaluated to true" (:hash last-block))
+            (validate new-chain))
+            (println "false!"))))))
   (if (= genesis-block
-         (first @chain))
-    true false)) ;; if it is first, return true
-        ;; TODO: add propper validation
+        (first @chain))
+    (do
+      (println "Checkin genesis blokk")
+      true) 
+    false)) ;; if it is first, return true
 
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  (println "Hello, World!")
-  (swap! chain conj genesis-block)
-  (println (json/write-str
-    @(add-block chain "jeff" "hello world")))
-  (println (validate chain)))
+  (append-block blockchain genesis-block)
+  (append-block blockchain {
+    :nonce 234123123
+    :hash "this is not a real blocc"
+  })
+  ;;(println (json/write-str
+    ;;@(add-block blockchain "ried" "ur mum big bad dumb")))
+  ;;(println @blockchain)
+  (println "Blokk chain valid? " (validate blockchain)))
