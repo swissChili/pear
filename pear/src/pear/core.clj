@@ -4,6 +4,10 @@
             [digest]))
 
 (def chain (atom []))
+(def genesis-block {
+  :nonce 0
+  :hash "GENESIS"
+})
 
 (defn add-block 
   "This adds a block to the chain"
@@ -29,13 +33,16 @@
         (let [chain-hash (digest/md5 (json/write-str new-chain))]
           (if (= chain-hash (:hash last-block))
             (validate new-chain) false)))))
-  true) ;; if it is first, return true
+  (if (= genesis-block
+         (first @chain))
+    true false)) ;; if it is first, return true
         ;; TODO: add propper validation
 
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
   (println "Hello, World!")
+  (swap! chain conj genesis-block)
   (println (json/write-str
     @(add-block chain "jeff" "hello world")))
   (println (validate chain)))
