@@ -5,7 +5,7 @@
             [ring.adapter.jetty]))
 
 (def blockchain (atom []))
-(def contacts (atom []))
+(def peers (atom []))
 (def genesis-block {
   :nonce 0
   :hash "GENESIS"
@@ -56,18 +56,28 @@
 (defn handler
   "handles incoming requests and returns appropriat info"
   [request]
-  {
-    :status 200
-    :headers {"Content-Type" "text/html"}
-    :body "Pear"
-  })
+  (do
+  (let [url (:uri request)]
+  (cond
+    (= url "/chain") 
+      { :status 200
+        :headers {"Content-Type" "text/json"}
+        :body (json/write-str @blockchain) }
+    (= url "/peers")
+      { :status 200
+        :headers {"Content-Type" "text/json"}
+        :body (json/write-str @peers )}
+    :else 
+      { :status 404
+        :headers {"Content-Type" "text/plain"}
+        :body "error 404: path not found. Try /chain || /peers"}))))
 
 (defn -main
-  "I don't do a whole lot ... yet."
+  "Initiate blockchain"
   [& args]
   (append-block blockchain genesis-block)
   ;;(println (json/write-str
     ;;@(add-block blockchain "ried" "ur mum big bad dumb")))
   ;;(println @blockchain)
   ;;(println "Validating blockchain..." (validate blockchain)))
-  (run-jetty handler {:port 3000}))
+  (ring.adapter.jetty/run-jetty handler {:port 3000}))

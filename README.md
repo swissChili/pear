@@ -4,21 +4,19 @@ wip p2p chat
 
 ## Installation
 
-Download from http://example.com/FIXME.
+Download `jar` from releases page. 
 
 ## Usage
 
-FIXME: explanation
-
-    $ java -jar pear-0.1.0-standalone.jar [args]
+Start application 
+```sh
+$ java -jar pear-0.1.0-standalone.jar [args]
+```
 
 ## Options
 
-FIXME: listing of options this app accepts.
+Pear does not accept any arguments
 
-## Examples
-
-...
 
 ### Bugs
 
