@@ -1,9 +1,11 @@
 (ns pear.core
   (:gen-class)
   (:require [clojure.data.json :as json]
-            [digest]))
+            [digest]
+            [ring.adapter.jetty]))
 
 (def blockchain (atom []))
+(def contacts (atom []))
 (def genesis-block {
   :nonce 0
   :hash "GENESIS"
@@ -50,6 +52,16 @@
       true)
     false))) ;; if it is first, return true
 
+;; server logic
+(defn handler
+  "handles incoming requests and returns appropriat info"
+  [request]
+  {
+    :status 200
+    :headers {"Content-Type" "text/html"}
+    :body "Pear"
+  })
+
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
@@ -57,4 +69,5 @@
   ;;(println (json/write-str
     ;;@(add-block blockchain "ried" "ur mum big bad dumb")))
   ;;(println @blockchain)
-  (println "Validating blockchain..." (validate blockchain)))
+  ;;(println "Validating blockchain..." (validate blockchain)))
+  (run-jetty handler {:port 3000}))
