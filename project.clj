@@ -7,7 +7,8 @@
                  [org.clojure/data.json "0.2.6"]
                  [digest "1.4.8"]
                  [ring/ring-jetty-adapter "1.6.3"]
-                 [ring/ring-core "1.6.3"]]
+                 [ring/ring-core "1.6.3"]
+                 [seesaw "1.5.0"]]
   :main ^:skip-aot pear.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
