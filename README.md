@@ -1,6 +1,6 @@
 # pear
 
-FIXME: description
+wip p2p chat
 
 ## Installation
 
