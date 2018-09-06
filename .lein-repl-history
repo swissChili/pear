@@ -39,3 +39,4 @@
 (join-chain "127.0.0.1")
 (println peers)
 (println @peers)
+(* (- 0 3) (- 0 9))

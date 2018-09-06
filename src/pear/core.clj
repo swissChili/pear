@@ -71,6 +71,22 @@
       { :status 200
         :headers {"Content-Type" "text/json"}
         :body (json/write-str @peers) }
+    (= url "/updated")
+      (do
+        ; get requesters chain
+        (let [request-update (fn 
+          [peer-index]
+          (println (slurp (apply str ["http://" (:host (nth peer-index @peers) ":" port "/chain")])))
+          (if (> (count @peers) 0)
+            (request-update (+ peer-index 1))
+            { :status 200
+              :headers {"Content-Type" "text/plain"}
+              :body "success"}))]
+        (if (> (count peers) 0)
+          (request-update 0)
+          { :status 500
+            :headers {"Content-Type" "text/plain"}
+            :body "no peers"})))
     (= url "/register")
       (do
         (println request)
