@@ -3,13 +3,16 @@
   (:require [clojure.data.json :as json]
             [digest]
             [ring.adapter.jetty]
-            [seesaw.core :refer :all]))
+            [seesaw.core :refer :all]
+            [org.httpkit.client :as http]))
+
+(def port 23952)
 
 (def blockchain (atom []))
 (def peers (atom []))
 (def genesis-block {
   :nonce 0
-  :hash "GENESIS"
+  :hash ""
   :sender "God"
   :message "Let there be light!"
 })
@@ -24,7 +27,7 @@
   (let [hash (digest/md5 (json/write-str @chain))]
     (let [block {
         :nonce 0
-        :message message 
+        :message message
         :sender sender
         :hash hash
       }]
@@ -50,7 +53,7 @@
             false))))
   (if (= genesis-block
         (first @chain))
-    true    ;; if it is first, return true
+    true     ;; if it is first, return true
     false))) ;; return false if first block not genesis
 
 ;; server logic
@@ -71,16 +74,25 @@
     (= url "/register")
       (do
         (println request)
+        (let [peer {:host (:remote-addr request)}]
+          (append-block peers peer)
+          (println @peers)
         { :status 200
           :headers {"Content-Type" "text/json"}
-          :body (json/write-str @blockchain) })
+          :body (json/write-str @blockchain) }))
     :else 
       { :status 404
         :headers {"Content-Type" "text/plain"}
         :body "error 404: path not found. Try /chain || /peers" }))))
 
+(defn join-chain 
+  "sends a register request to a specified IP"
+  [ip]
+  (let [registered-chain (slurp (apply str ["http://" ip ":" port "/register"]))]
+    (println ip registered-chain)))
+
 (defn start-ui
-  "starts up the user interface so i dont clutter -main"
+  "starts up the user interface so I dont clutter -main"
   []
   (def f (frame :title "Pear"))
   (defn display
@@ -103,5 +115,4 @@
   ;;(println "Validating blockchain..." (validate blockchain)))
   ;; start ui
   (start-ui)
-  (ring.adapter.jetty/run-jetty handler {:port 3000}))
-    
+  (ring.adapter.jetty/run-jetty handler {:port port}))
