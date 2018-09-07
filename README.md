@@ -30,7 +30,7 @@ This is my first serious Clojure program, so please excuse messy code. I chose c
 
 **So what does it do so far?**
 
-So far, pear has the following features, see [roadmap](./#roadmap) for more info.
+So far, pear has the following features, see [roadmap](#roadmap) for more info.
 - Creates a blockchain, and validates it. There is no proof of work algorithm implemented as of yet.
 - Creates an extremely basic UI, and renders the list to it. The list does not yet update with the chain
 - Uses Ring to listen for HTTP requests, and responds to *some* accordingly.
