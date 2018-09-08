@@ -10,6 +10,7 @@
 
 (def blockchain (atom []))
 (def peers (atom []))
+
 (def genesis-block {
   :nonce 0
   :hash ""
@@ -21,7 +22,7 @@
   [chain block]
   (swap! chain conj block))
 
-(defn add-block 
+(defn add-block
   "This adds a block to the chain"
   [chain sender message]
   (let [hash (digest/md5 (json/write-str @chain))]
@@ -43,11 +44,8 @@
     (let [new-chain (atom (drop-last @chain))]
       (let [last-block (last @chain)]
         (let [chain-hash (digest/md5 (json/write-str @new-chain))]
-          (println "CHain Hash: " chain-hash)
-          (println "Block Hash: " (:hash last-block))
           (if (= chain-hash (:hash last-block))
             (do
-            (println "IF evaluated to true" (:hash last-block))
             (validate new-chain))
             ;; return false if hash is invalid
             false))))
@@ -74,19 +72,23 @@
     (= url "/updated")
       (do
         ; get requesters chain
-        (let [request-update (fn 
+        (defn request-update 
+          "check all the peers for new chain instances"
           [peer-index]
-          (println (slurp (apply str ["http://" (:host (nth peer-index @peers) ":" port "/chain")])))
+          (let [request-chain (slurp
+            (apply str
+              ["http://" (:host (nth peer-index @peers) ":" port "/chain")]))]
+          )
           (if (> (count @peers) 0)
             (request-update (+ peer-index 1))
             { :status 200
               :headers {"Content-Type" "text/plain"}
-              :body "success"}))]
+              :body "added to peer list"}))
         (if (> (count peers) 0)
           (request-update 0)
           { :status 500
             :headers {"Content-Type" "text/plain"}
-            :body "no peers"})))
+            :body "no peers"}))
     (= url "/register")
       (do
         (println request)
@@ -96,16 +98,21 @@
         { :status 200
           :headers {"Content-Type" "text/json"}
           :body (json/write-str @blockchain) }))
-    :else 
+    :else
       { :status 404
         :headers {"Content-Type" "text/plain"}
         :body "error 404: path not found. Try /chain || /peers" }))))
 
-(defn join-chain 
+(defn join-chain
   "sends a register request to a specified IP"
   [ip]
   (let [registered-chain (slurp (apply str ["http://" ip ":" port "/register"]))]
     (println ip registered-chain)))
+
+(defn share-chain
+  "shares the updated chain with all peers"
+  [chain]
+  )
 
 (defn start-ui
   "starts up the user interface so I dont clutter -main"
@@ -117,14 +124,30 @@
     content)
 
   (def messages (listbox :model (-> @blockchain)))
-  (display messages)
+  (display (scrollable messages))
   (invoke-later
     (-> f pack! show!)))
+(defn update-list
+  "updates the listbox with the new blockchain"
+  [listbox chain]
+  (println chain)
+  (seesaw.core/config! listbox :model @chain))
+
+(defn create-message
+  "creates a message in the chain and updates UI"
+  [message]
+  (add-block
+   blockchain
+   (slurp "http://icanhazip.com")
+   message)
+  (update-list messages blockchain)
+  )
 
 (defn -main
   "Initiate blockchain"
   [& args]
   (append-block blockchain genesis-block)
+  (println "started pear-server on" (slurp "http://icanhazip.com") "port" port)
   ;;(println (json/write-str
     ;;@(add-block blockchain "ried" "ur mum big bad dumb")))
   ;;(println @blockchain)
