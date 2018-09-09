@@ -122,16 +122,30 @@
     [content]
     (config! f :content content)
     content)
-
-  (def messages (listbox :model (-> @blockchain)))
-  (display (scrollable messages))
+  (def messages (listbox :model (-> (map (fn [x] (:message x)) @blockchain))))
+  (def left-panel (flow-panel
+                   :align :left
+                   :hgap 20
+                   :items [
+                           "Join Chain:"
+                           ]))
+  (def messages-panel (flow-panel
+                       :align :left
+                       :hgap 20
+                       :items [
+                               messages
+                               ]))
+  (def split (left-right-split (scrollable left-panel) (scrollable messages-panel)
+                               :divider-location 1/3))
+  (display split)
   (invoke-later
     (-> f pack! show!)))
+
 (defn update-list
   "updates the listbox with the new blockchain"
   [listbox chain]
   (println chain)
-  (seesaw.core/config! listbox :model @chain))
+  (seesaw.core/config! listbox :model (map (fn [x] (:message x))@chain)))
 
 (defn create-message
   "creates a message in the chain and updates UI"
