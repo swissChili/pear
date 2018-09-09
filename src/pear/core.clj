@@ -123,17 +123,22 @@
     (config! f :content content)
     content)
   (def messages (listbox :model (-> (map (fn [x] (:message x)) @blockchain))))
+  (def connect-button (button :text "Connect via IP"))
+  (listen connect-button :action (fn [e]
+                                   (alert e "Clonked")))
+  (def message-field (display (text "Message:")))
   (def left-panel (flow-panel
                    :align :left
                    :hgap 20
                    :items [
-                           "Join Chain:"
+                           connect-button
                            ]))
   (def messages-panel (flow-panel
                        :align :left
                        :hgap 20
                        :items [
                                messages
+                               message-field
                                ]))
   (def split (left-right-split (scrollable left-panel) (scrollable messages-panel)
                                :divider-location 1/3))
